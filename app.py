@@ -57,7 +57,6 @@ TRACKED_CITIES = {
     'COLUMBUS': {'latitude': 39.9622601, 'longitude': -83.0007065, 'state': 'Ohio'},
     'CORPUS CHRISTI': {'latitude': 27.7635302, 'longitude': -97.4033191, 'state': 'Texas'},
     'DALLAS': {'latitude': 32.7762719, 'longitude': -96.7968559, 'state': 'Texas'},
-    'DAVENPORT': {'latitude': 41.5235808, 'longitude': -90.5770967, 'state': 'Iowa'},
     'DAYTON': {'latitude': 39.7589478, 'longitude': -84.1916069, 'state': 'Ohio'},
     'DEARBORN': {'latitude': 42.3222599, 'longitude': -83.1763145, 'state': 'Michigan'},
     'DENVER': {'latitude': 39.7392364, 'longitude': -104.984862, 'state': 'Colorado'},
@@ -118,7 +117,6 @@ TRACKED_CITIES = {
     'PROVIDENCE': {'latitude': 41.8239891, 'longitude': -71.4128343, 'state': 'Rhode Island'},
     'RALEIGH': {'latitude': 35.7803977, 'longitude': -78.6390989, 'state': 'North Carolina'},
     'READING': {'latitude': 40.335345, 'longitude': -75.9279495, 'state': 'Pennsylvania'},
-    'RENO': {'latitude': 39.5261206, 'longitude': -119.8126581, 'state': 'Nevada'},
     'RICHMOND': {'latitude': 37.5385087, 'longitude': -77.43428, 'state': 'Virginia'},
     'RIVERSIDE': {'latitude': 33.7219991, 'longitude': -116.0372472, 'state': 'California'},
     'ROCHESTER (NY)': {'latitude': 43.157285, 'longitude': -77.615214, 'state': 'New York'},
@@ -337,14 +335,14 @@ if st.button("🔍 Find Nearest City", type="primary", use_container_width=True)
             st.subheader("📊 Top 5 Nearest Tracked Cities")
             
             df = pd.DataFrame(result['top_5'])
+            df = df.drop(columns=['distance_km'])
             df.index = range(1, len(df) + 1)
-            df.columns = ['City', 'State', 'Distance (km)', 'Distance (miles)']
+            df.columns = ['City', 'State', 'Distance (miles)']
             
             st.dataframe(
                 df,
                 use_container_width=True,
                 column_config={
-                    "Distance (km)": st.column_config.NumberColumn(format="%.2f km"),
                     "Distance (miles)": st.column_config.NumberColumn(format="%.2f mi"),
                 }
             )
@@ -363,7 +361,7 @@ with st.sidebar:
     3. Click search to find the nearest tracked city
     
     **Same State First Option:**
-    - **Yes**: First looks for tracked cities in the same state. If none found, expands to all states.
+    - **Yes**: Looks for tracked cities in the same state.
     - **No**: Searches all tracked cities regardless of state.
     """)
     
