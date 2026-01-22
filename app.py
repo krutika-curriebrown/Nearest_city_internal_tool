@@ -163,7 +163,7 @@ TRACKED_CITIES = {
 
 # List of US states for dropdown
 US_STATES = [
-    "", "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
     "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
     "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
     "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
@@ -271,7 +271,7 @@ with col1:
 
 with col2:
     state_input = st.selectbox(
-        "State (Optional)",
+        "State",
         options=US_STATES,
         help="Selecting a state improves geocoding accuracy"
     )
@@ -289,9 +289,11 @@ st.divider()
 if st.button("🔍 Find Nearest City", type="primary", use_container_width=True):
     if not city_input:
         st.warning("Please enter a city name.")
+    elif not state_input:
+        st.warning("Please select a state.")
     else:
         with st.spinner("Searching..."):
-            state = state_input if state_input else None
+            state = state_input
             result = find_nearest_tracked_city(city_input, state, same_state_only)
         
         if result:
