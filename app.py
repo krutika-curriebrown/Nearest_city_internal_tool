@@ -366,7 +366,7 @@ if st.button("🔍 Find Nearest City", type="primary", use_container_width=True)
             st.subheader("📊 Top 5 Nearest Tracked Cities")
             
             df = pd.DataFrame(result['top_5'])
-            df = df.drop(columns=['distance_km'])
+            df = df[['city', 'state', 'distance_miles']]
             df.index = range(1, len(df) + 1)
             df.columns = ['City', 'State', 'Distance (miles)']
             
