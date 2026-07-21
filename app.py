@@ -36,6 +36,9 @@ st.markdown("""
     div[data-testid="stExpander"] {
         border: 1px solid #d4cfc9; border-radius: 8px; background: white;
     }
+    [data-testid="stSidebar"] div[data-testid="stExpander"] * {
+        color: #3b1f52 !important;
+    }
     [data-testid="stSidebar"] code {
         background: #52297a !important; color: #ffe9a8 !important;
         padding: 1px 5px; border-radius: 4px;
