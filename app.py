@@ -16,7 +16,7 @@ import pydeck as pdk
 st.set_page_config(
     page_title="Find Nearest Tracked City",
     page_icon="📍",
-    layout="centered"
+    layout="wide"
 )
 
 # ── Currie & Brown theme ──────────────────────────────────────────────────────
@@ -364,70 +364,72 @@ if st.button("🔍 Find Nearest City", type="primary", use_container_width=True)
                 st.metric("Distance", f"{nearest['distance_miles']:.1f} mi")
             
             st.divider()
-            
-            # Display top 5 nearest cities
-            st.subheader("📊 Top 5 Nearest Tracked Cities")
-            
-            df = pd.DataFrame(result['top_5'])
-            df = df[['city', 'state', 'distance_miles']]
-            df.index = range(1, len(df) + 1)
-            df.columns = ['City', 'State', 'Distance (miles)']
-            
-            st.dataframe(
-                df,
-                use_container_width=True,
-                column_config={
-                    "Distance (miles)": st.column_config.NumberColumn(format="%.2f mi"),
-                }
-            )
 
-            st.divider()
+            # Display top 5 nearest cities and map side by side
+            list_col, map_col = st.columns([1, 1])
 
-            # Map of the input location and its nearest tracked cities
-            st.subheader("🗺️ Map View")
+            with list_col:
+                st.subheader("📊 Top 5 Nearest")
 
-            input_point = pd.DataFrame([{
-                'city': result['input_city'],
-                'latitude': result['input_coords'][0],
-                'longitude': result['input_coords'][1],
-                'label': f"{result['input_city']} (your search)",
-            }])
-            tracked_points = pd.DataFrame(result['top_5'])
-            tracked_points['label'] = (
-                tracked_points['city'] + " — " + tracked_points['distance_miles'].astype(str) + " mi"
-            )
+                df = pd.DataFrame(result['top_5'])
+                df = df[['city', 'state', 'distance_miles']]
+                df.index = range(1, len(df) + 1)
+                df.columns = ['City', 'State', 'Distance (miles)']
 
-            all_points = pd.concat([
-                input_point[['latitude', 'longitude']],
-                tracked_points[['latitude', 'longitude']],
-            ], ignore_index=True)
-            view_state = pdk.data_utils.compute_view(all_points[['longitude', 'latitude']].values.tolist())
-            view_state.zoom = max(view_state.zoom - 0.5, 0)
+                st.dataframe(
+                    df,
+                    use_container_width=True,
+                    height=280,
+                    column_config={
+                        "Distance (miles)": st.column_config.NumberColumn(format="%.2f mi"),
+                    }
+                )
 
-            tracked_layer = pdk.Layer(
-                "ScatterplotLayer",
-                data=tracked_points,
-                get_position='[longitude, latitude]',
-                get_fill_color='[59, 31, 82, 200]',
-                get_radius=9000,
-                pickable=True,
-            )
-            input_layer = pdk.Layer(
-                "ScatterplotLayer",
-                data=input_point,
-                get_position='[longitude, latitude]',
-                get_fill_color='[255, 179, 71, 230]',
-                get_radius=11000,
-                pickable=True,
-            )
+            with map_col:
+                st.subheader("🗺️ Map View")
 
-            st.pydeck_chart(pdk.Deck(
-                map_style=None,
-                initial_view_state=view_state,
-                layers=[tracked_layer, input_layer],
-                tooltip={"text": "{label}"},
-            ))
-            st.caption("🟠 Your search location  🟣 Tracked cities (top 5 nearest)")
+                input_point = pd.DataFrame([{
+                    'city': result['input_city'],
+                    'latitude': result['input_coords'][0],
+                    'longitude': result['input_coords'][1],
+                    'label': f"{result['input_city']} (your search)",
+                }])
+                tracked_points = pd.DataFrame(result['top_5'])
+                tracked_points['label'] = (
+                    tracked_points['city'] + " — " + tracked_points['distance_miles'].astype(str) + " mi"
+                )
+
+                all_points = pd.concat([
+                    input_point[['latitude', 'longitude']],
+                    tracked_points[['latitude', 'longitude']],
+                ], ignore_index=True)
+                view_state = pdk.data_utils.compute_view(all_points[['longitude', 'latitude']].values.tolist())
+                view_state.zoom = max(view_state.zoom - 0.5, 0)
+
+                tracked_layer = pdk.Layer(
+                    "ScatterplotLayer",
+                    data=tracked_points,
+                    get_position='[longitude, latitude]',
+                    get_fill_color='[59, 31, 82, 200]',
+                    get_radius=9000,
+                    pickable=True,
+                )
+                input_layer = pdk.Layer(
+                    "ScatterplotLayer",
+                    data=input_point,
+                    get_position='[longitude, latitude]',
+                    get_fill_color='[255, 179, 71, 230]',
+                    get_radius=11000,
+                    pickable=True,
+                )
+
+                st.pydeck_chart(pdk.Deck(
+                    map_style=None,
+                    initial_view_state=view_state,
+                    layers=[tracked_layer, input_layer],
+                    tooltip={"text": "{label}"},
+                ), height=280)
+                st.caption("🟠 Your search location  🟣 Tracked cities (top 5 nearest)")
         else:
             st.error("Could not find coordinates for the specified city. Please check the city name and try again.")
 
