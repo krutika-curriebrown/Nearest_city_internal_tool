@@ -428,7 +428,7 @@ if st.button("🔍 Find Nearest City", type="primary", use_container_width=True)
                     initial_view_state=view_state,
                     layers=[tracked_layer, input_layer],
                     tooltip={"text": "{label}"},
-                ), height=280)
+                ))
                 st.caption("🟠 Your search location  🟣 Tracked cities (top 5 nearest)")
         else:
             st.error("Could not find coordinates for the specified city. Please check the city name and try again.")
