@@ -10,6 +10,7 @@ from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderTimedOut
 from geopy.distance import geodesic
 import pandas as pd
+import pydeck as pdk
 
 # Page configuration
 st.set_page_config(
@@ -17,6 +18,32 @@ st.set_page_config(
     page_icon="📍",
     layout="centered"
 )
+
+# ── Currie & Brown theme ──────────────────────────────────────────────────────
+st.markdown("""
+<style>
+    [data-testid="stAppViewContainer"] { background: #f7f5f3; }
+    [data-testid="stSidebar"] { background: #3b1f52; }
+    [data-testid="stSidebar"] * { color: #e3dedb !important; }
+    .block-container { padding-top: 2rem; padding-bottom: 2rem; }
+    h1 { color: #3b1f52 !important; }
+    h2, h3 { color: #3b1f52 !important; }
+    .stButton > button {
+        background: #3b1f52; color: #e3dedb;
+        border: none; border-radius: 6px; font-weight: 500;
+    }
+    .stButton > button:hover { background: #52297a; color: white; }
+    div[data-testid="stExpander"] {
+        border: 1px solid #d4cfc9; border-radius: 8px; background: white;
+    }
+    [data-testid="stSidebar"] code {
+        background: #52297a !important; color: #ffe9a8 !important;
+        padding: 1px 5px; border-radius: 4px;
+    }
+    [data-testid="stMetricValue"] { color: #3b1f52; }
+    [data-testid="stMetricLabel"] { color: #6b5b7a; }
+</style>
+""", unsafe_allow_html=True)
 
 # Initialize geolocator with caching
 @st.cache_resource
@@ -232,6 +259,8 @@ def find_nearest_tracked_city(input_city, input_state=None, same_state_only=True
         distances.append({
             'city': city,
             'state': coords.get('state'),
+            'latitude': coords['latitude'],
+            'longitude': coords['longitude'],
             'distance_km': round(distance, 2),
             'distance_miles': round(distance * 0.621371, 2)
         })
@@ -348,6 +377,54 @@ if st.button("🔍 Find Nearest City", type="primary", use_container_width=True)
                     "Distance (miles)": st.column_config.NumberColumn(format="%.2f mi"),
                 }
             )
+
+            st.divider()
+
+            # Map of the input location and its nearest tracked cities
+            st.subheader("🗺️ Map View")
+
+            input_point = pd.DataFrame([{
+                'city': result['input_city'],
+                'latitude': result['input_coords'][0],
+                'longitude': result['input_coords'][1],
+                'label': f"{result['input_city']} (your search)",
+            }])
+            tracked_points = pd.DataFrame(result['top_5'])
+            tracked_points['label'] = (
+                tracked_points['city'] + " — " + tracked_points['distance_miles'].astype(str) + " mi"
+            )
+
+            all_points = pd.concat([
+                input_point[['latitude', 'longitude']],
+                tracked_points[['latitude', 'longitude']],
+            ], ignore_index=True)
+            view_state = pdk.data_utils.compute_view(all_points[['longitude', 'latitude']].values.tolist())
+            view_state.zoom = max(view_state.zoom - 0.5, 0)
+
+            tracked_layer = pdk.Layer(
+                "ScatterplotLayer",
+                data=tracked_points,
+                get_position='[longitude, latitude]',
+                get_fill_color='[59, 31, 82, 200]',
+                get_radius=9000,
+                pickable=True,
+            )
+            input_layer = pdk.Layer(
+                "ScatterplotLayer",
+                data=input_point,
+                get_position='[longitude, latitude]',
+                get_fill_color='[255, 179, 71, 230]',
+                get_radius=11000,
+                pickable=True,
+            )
+
+            st.pydeck_chart(pdk.Deck(
+                map_style=None,
+                initial_view_state=view_state,
+                layers=[tracked_layer, input_layer],
+                tooltip={"text": "{label}"},
+            ))
+            st.caption("🟠 Your search location  🟣 Tracked cities (top 5 nearest)")
         else:
             st.error("Could not find coordinates for the specified city. Please check the city name and try again.")
 
